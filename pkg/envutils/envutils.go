@@ -10,7 +10,7 @@ import (
 func GetEnvString(name string, def string) string {
 	valStr := os.Getenv(name)
 	if valStr != "" {
-		return name
+		return valStr
 	}
 	return def
 }
@@ -28,6 +28,7 @@ func RequireEnvBase64(name string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("valStr: %v\n", valStr)
 	return base64.StdEncoding.DecodeString(valStr)
 }
 
