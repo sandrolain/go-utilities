@@ -1,4 +1,4 @@
-package mongodb
+package mongoutils
 
 import (
 	"context"
@@ -6,19 +6,18 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-type DatabaseClient struct {
+type Client struct {
 	client  *mongo.Client
 	db      *mongo.Database
 	timeout time.Duration
 }
 
-func (c *DatabaseClient) Close() {
+func (c *Client) Close() {
 	defer func() {
 		ctx, cancel := createContext(c.timeout)
 		defer cancel()
@@ -28,7 +27,7 @@ func (c *DatabaseClient) Close() {
 	}()
 }
 
-func (c *DatabaseClient) Ping() error {
+func (c *Client) Ping() error {
 	ctx, cancel := createContext(c.timeout)
 	defer cancel()
 	if err := c.client.Ping(ctx, readpref.Primary()); err != nil {
@@ -38,7 +37,7 @@ func (c *DatabaseClient) Ping() error {
 	return nil
 }
 
-func (c *DatabaseClient) AssertUniqueIndex(collection string, field string) (string, error) {
+func (c *Client) AssertUniqueIndex(collection string, field string) (string, error) {
 	return c.Coll(collection).Indexes().CreateOne(
 		context.Background(),
 		mongo.IndexModel{
@@ -48,7 +47,7 @@ func (c *DatabaseClient) AssertUniqueIndex(collection string, field string) (str
 	)
 }
 
-func (c *DatabaseClient) AssertIndex(collection string, field string) (string, error) {
+func (c *Client) AssertIndex(collection string, field string) (string, error) {
 	return c.Coll(collection).Indexes().CreateOne(
 		context.Background(),
 		mongo.IndexModel{
@@ -57,11 +56,11 @@ func (c *DatabaseClient) AssertIndex(collection string, field string) (string, e
 	)
 }
 
-func (c *DatabaseClient) Coll(collection string) *mongo.Collection {
+func (c *Client) Coll(collection string) *mongo.Collection {
 	return c.db.Collection(collection)
 }
 
-func (c *DatabaseClient) FindOne(collection string, filter interface{}, v interface{}) (bool, error) {
+func (c *Client) FindOne(collection string, filter interface{}, v interface{}) (bool, error) {
 	ctx, cancel := createContext(c.timeout)
 	defer cancel()
 	err := c.db.Collection(collection).FindOne(ctx, filter).Decode(v)
@@ -74,17 +73,17 @@ func (c *DatabaseClient) FindOne(collection string, filter interface{}, v interf
 	return true, nil
 }
 
-func (c *DatabaseClient) FindOneById(collection string, id primitive.ObjectID, v interface{}) (bool, error) {
+func (c *Client) FindOneById(collection string, id interface{}, v interface{}) (bool, error) {
 	filter := bson.M{"_id": id}
 	return c.FindOne(collection, filter, v)
 }
 
-func (c *DatabaseClient) FindOneByField(collection string, field string, value interface{}, v interface{}) (bool, error) {
+func (c *Client) FindOneByField(collection string, field string, value interface{}, v interface{}) (bool, error) {
 	filter := bson.M{field: value}
 	return c.FindOne(collection, filter, v)
 }
 
-func (c *DatabaseClient) FindMany(collection string, filter interface{}, sort interface{}, limit int64, v interface{}) error {
+func (c *Client) FindMany(collection string, filter interface{}, sort interface{}, limit int64, v interface{}) error {
 	ctx, cancel := createContext(c.timeout)
 	defer cancel()
 	opts := options.Find()
@@ -101,68 +100,74 @@ func (c *DatabaseClient) FindMany(collection string, filter interface{}, sort in
 	return cursor.All(ctx, v)
 }
 
-func (c *DatabaseClient) FindManyByField(collection string, field string, value interface{}, sort int, limit int64, v interface{}) error {
+func (c *Client) FindManyByField(collection string, field string, value interface{}, sort int, limit int64, v interface{}) error {
 	filter := bson.M{field: value}
 	sortExp := bson.M{field: sort}
 	return c.FindMany(collection, filter, sortExp, limit, v)
 }
 
-func (c *DatabaseClient) InsertOne(collection string, v interface{}) (*mongo.InsertOneResult, error) {
+func (c *Client) InsertOne(collection string, v interface{}) (*mongo.InsertOneResult, error) {
 	ctx, cancel := createContext(c.timeout)
 	defer cancel()
 	return c.db.Collection(collection).InsertOne(ctx, v)
 }
 
-func (c *DatabaseClient) InsertMany(collection string, v []interface{}) (*mongo.InsertManyResult, error) {
+func (c *Client) InsertMany(collection string, v []interface{}) (*mongo.InsertManyResult, error) {
 	ctx, cancel := createContext(c.timeout)
 	defer cancel()
 	return c.db.Collection(collection).InsertMany(ctx, v)
 }
 
-func (c *DatabaseClient) UpdateOne(collection string, filter interface{}, update interface{}) (*mongo.UpdateResult, error) {
+func (c *Client) UpdateOne(collection string, filter interface{}, update interface{}) (*mongo.UpdateResult, error) {
 	opts := options.Update()
 	ctx, cancel := createContext(c.timeout)
 	defer cancel()
 	return c.db.Collection(collection).UpdateOne(ctx, filter, bson.M{"$set": update}, opts)
 }
 
-func (c *DatabaseClient) UpdateOneByField(collection string, field string, value interface{}, update interface{}) (*mongo.UpdateResult, error) {
+func (c *Client) UpdateOneByField(collection string, field string, value interface{}, update interface{}) (*mongo.UpdateResult, error) {
 	filter := bson.M{field: value}
 	return c.UpdateOne(collection, filter, update)
 }
 
-func (c *DatabaseClient) UpdateOneById(collection string, id primitive.ObjectID, update interface{}) (*mongo.UpdateResult, error) {
+func (c *Client) UpdateOneById(collection string, id interface{}, update interface{}) (*mongo.UpdateResult, error) {
 	return c.UpdateOne(collection, bson.M{"_id": id}, update)
 }
 
-func (c *DatabaseClient) UpsertOne(collection string, filter interface{}, update interface{}) (*mongo.UpdateResult, error) {
+func (c *Client) UpsertOne(collection string, filter interface{}, update interface{}) (*mongo.UpdateResult, error) {
 	opts := options.Update().SetUpsert(true)
 	ctx, cancel := createContext(c.timeout)
 	defer cancel()
 	return c.db.Collection(collection).UpdateOne(ctx, filter, bson.M{"$set": update}, opts)
 }
 
-func (c *DatabaseClient) UpsertOneByField(collection string, field string, value interface{}, update interface{}) (*mongo.UpdateResult, error) {
+func (c *Client) UpsertOneByField(collection string, field string, value interface{}, update interface{}) (*mongo.UpdateResult, error) {
 	filter := bson.M{field: value}
 	return c.UpsertOne(collection, filter, update)
 }
 
-func (c *DatabaseClient) UpsertOneById(collection string, id primitive.ObjectID, update interface{}) (*mongo.UpdateResult, error) {
+func (c *Client) UpsertOneById(collection string, id interface{}, update interface{}) (*mongo.UpdateResult, error) {
 	return c.UpsertOne(collection, bson.M{"_id": id}, update)
 }
 
-func (c *DatabaseClient) DeleteOne(collection string, filter interface{}) (*mongo.DeleteResult, error) {
+func (c *Client) DeleteOne(collection string, filter interface{}) (*mongo.DeleteResult, error) {
 	ctx, cancel := createContext(c.timeout)
 	defer cancel()
 	return c.db.Collection(collection).DeleteOne(ctx, filter)
 }
 
-func (c *DatabaseClient) DeleteOneByField(collection string, field string, value interface{}) (*mongo.DeleteResult, error) {
+func (c *Client) DeleteOneByField(collection string, field string, value interface{}) (*mongo.DeleteResult, error) {
 	return c.DeleteOne(collection, bson.M{field: value})
 }
 
-func (c *DatabaseClient) DeleteOneById(collection string, id primitive.ObjectID) (*mongo.DeleteResult, error) {
+func (c *Client) DeleteOneById(collection string, id interface{}) (*mongo.DeleteResult, error) {
 	return c.DeleteOne(collection, bson.M{"_id": id})
+}
+
+func (c *Client) DeleteMany(collection string, filter interface{}) (*mongo.DeleteResult, error) {
+	ctx, cancel := createContext(c.timeout)
+	defer cancel()
+	return c.db.Collection(collection).DeleteMany(ctx, filter)
 }
 
 func createContext(timeout time.Duration) (context.Context, context.CancelFunc) {
@@ -175,12 +180,22 @@ func connect(uri string, timeout time.Duration) (*mongo.Client, error) {
 	return client, err
 }
 
-func NewDatabaseClient(uri string, database string, timeout time.Duration) (*DatabaseClient, error) {
+func NewClient(uri string, database string, timeout time.Duration) (*Client, error) {
+	if uri == "" {
+		return nil, fmt.Errorf("empty MongoDB URI")
+	}
+	if database == "" {
+		return nil, fmt.Errorf("empty MongoDB database")
+	}
+	if timeout == 0 {
+		return nil, fmt.Errorf("empty MongoDB timeout")
+	}
+
 	client, err := connect(uri, timeout)
 	if err != nil {
 		return nil, err
 	}
-	return &DatabaseClient{
+	return &Client{
 		client:  client,
 		db:      client.Database(database),
 		timeout: timeout,
