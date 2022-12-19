@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -28,8 +29,19 @@ func RequireEnvBase64(name string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("valStr: %v\n", valStr)
 	return base64.StdEncoding.DecodeString(valStr)
+}
+
+func RequireEnvPath(name string) (res string, err error) {
+	if res, err = RequireEnvString(name); err != nil {
+		return
+	}
+	if !filepath.IsAbs(res) {
+		err = fmt.Errorf("not a valid path: %v", res)
+		return
+	}
+	_, err = os.Stat(res)
+	return
 }
 
 func GetEnvInt(name string, def int) (int, error) {
