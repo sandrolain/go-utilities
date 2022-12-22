@@ -56,6 +56,18 @@ func (c *Client) AssertIndex(collection string, field string) (string, error) {
 	)
 }
 
+func (c *Client) AssertTtlIndex(collection string, field string, expireSeconds int32) (string, error) {
+	return c.Coll(collection).Indexes().CreateOne(
+		context.Background(),
+		mongo.IndexModel{
+			Keys: bson.D{{Key: field, Value: 1}},
+			Options: &options.IndexOptions{
+				ExpireAfterSeconds: &expireSeconds,
+			},
+		},
+	)
+}
+
 func (c *Client) Coll(collection string) *mongo.Collection {
 	return c.db.Collection(collection)
 }

@@ -73,7 +73,7 @@ func ExtractInfoFromJWT(jwtString string) (*JWTInfo, error) {
 		return nil, fmt.Errorf("Invalid JWT Subject \"%s\"", claims.Subject)
 	}
 	scope := claims.Subject[:i]
-	subject := claims.Subject[i:]
+	subject := claims.Subject[i+1:]
 	return &JWTInfo{
 		IssuedAt:  time.Unix(claims.IssuedAt, 0),
 		ExpiresAt: time.Unix(claims.ExpiresAt, 0),

@@ -6,6 +6,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
@@ -15,6 +16,12 @@ func RandomBytes(length int) []byte {
 	b := make([]byte, length)
 	rand.Read(b)
 	return b
+}
+
+func RandomBytesBase64(length int) string {
+	b := RandomBytes(length)
+	rand.Read(b)
+	return base64.StdEncoding.EncodeToString(b)
 }
 
 func BcryptHash(value []byte) ([]byte, error) {

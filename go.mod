@@ -7,7 +7,9 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/ory/dockertest/v3 v3.9.1
+	github.com/sethvargo/go-password v0.2.0
 	github.com/stretchr/testify v1.7.1
+	github.com/wagslane/go-password-validator v0.3.0
 	go.mongodb.org/mongo-driver v1.11.1
 	golang.org/x/crypto v0.4.0
 )

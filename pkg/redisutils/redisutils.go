@@ -54,6 +54,14 @@ func NewClient(address string, password string, tls *tls.Config, timeout time.Du
 		TLSConfig: tls,
 	})
 
+	ctx, cancel := createContext(timeout)
+	defer cancel()
+
+	_, err := client.Ping(ctx).Result()
+	if err != nil {
+		return nil, err
+	}
+
 	res := Client{
 		client:  client,
 		timeout: timeout,

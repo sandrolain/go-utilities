@@ -41,3 +41,23 @@ func IsNotAuthorized(e error) bool {
 	_, ok := e.(*NotAuthorizedError)
 	return ok
 }
+
+type InvalidValueError struct {
+	value string
+}
+
+func (m *InvalidValueError) Error() string {
+	if m.value == "" {
+		return "Invalid Value"
+	}
+	return fmt.Sprintf("Invalid Value: %v", m.value)
+}
+
+func InvalidValue(value string) error {
+	return &InvalidValueError{value}
+}
+
+func IsInvalidValue(e error) bool {
+	_, ok := e.(*InvalidValueError)
+	return ok
+}
