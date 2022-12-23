@@ -44,8 +44,8 @@ func Sha256Compare(value []byte, hash []byte) bool {
 	return bytes.Equal(hash, h)
 }
 
-func Encrypt(value []byte, passPhrase []byte) ([]byte, error) {
-	block, err := aes.NewCipher(passPhrase)
+func Encrypt(value []byte, passPhrase [32]byte) ([]byte, error) {
+	block, err := aes.NewCipher(passPhrase[0:])
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func Encrypt(value []byte, passPhrase []byte) ([]byte, error) {
 	return aesGCM.Seal(nonce, nonce, value, nil), nil
 }
 
-func EncryptWithHash(value []byte, passPhrase []byte) ([]byte, []byte, error) {
+func EncryptWithHash(value []byte, passPhrase [32]byte) ([]byte, []byte, error) {
 	hash := Sha256Hash(value)
 	enc, err := Encrypt(value, passPhrase)
 	if err != nil {
@@ -66,8 +66,8 @@ func EncryptWithHash(value []byte, passPhrase []byte) ([]byte, []byte, error) {
 	return enc, hash, nil
 }
 
-func Decrypt(value []byte, passPhrase []byte) ([]byte, error) {
-	block, err := aes.NewCipher(passPhrase)
+func Decrypt(value []byte, passPhrase [32]byte) ([]byte, error) {
+	block, err := aes.NewCipher(passPhrase[0:])
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func Decrypt(value []byte, passPhrase []byte) ([]byte, error) {
 	return aesGCM.Open(nil, nonce, secValue, nil)
 }
 
-func DecryptAndVerify(value []byte, passPhrase []byte, hash []byte) ([]byte, error) {
+func DecryptAndVerify(value []byte, passPhrase [32]byte, hash []byte) ([]byte, error) {
 	dec, err := Decrypt(value, passPhrase)
 	if err != nil {
 		return nil, err

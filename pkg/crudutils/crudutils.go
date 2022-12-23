@@ -2,15 +2,19 @@ package crudutils
 
 import "fmt"
 
+func formatMessageByValue(msg string, value string) string {
+	if value == "" {
+		return msg
+	}
+	return fmt.Sprintf("%v: %v", msg, value)
+}
+
 type NotFoundError struct {
 	value string
 }
 
 func (m *NotFoundError) Error() string {
-	if m.value == "" {
-		return "Not Found"
-	}
-	return fmt.Sprintf("Not Found: %v", m.value)
+	return formatMessageByValue("Not Found", m.value)
 }
 
 func NotFound(value string) error {
@@ -27,10 +31,7 @@ type NotAuthorizedError struct {
 }
 
 func (m *NotAuthorizedError) Error() string {
-	if m.value == "" {
-		return "Not Authorized"
-	}
-	return fmt.Sprintf("Not Authorized: %v", m.value)
+	return formatMessageByValue("Not Authorized", m.value)
 }
 
 func NotAuthorized(value string) error {
@@ -47,10 +48,7 @@ type InvalidValueError struct {
 }
 
 func (m *InvalidValueError) Error() string {
-	if m.value == "" {
-		return "Invalid Value"
-	}
-	return fmt.Sprintf("Invalid Value: %v", m.value)
+	return formatMessageByValue("Invalid Value", m.value)
 }
 
 func InvalidValue(value string) error {
@@ -59,5 +57,22 @@ func InvalidValue(value string) error {
 
 func IsInvalidValue(e error) bool {
 	_, ok := e.(*InvalidValueError)
+	return ok
+}
+
+type ExpiredResourceError struct {
+	value string
+}
+
+func (m *ExpiredResourceError) Error() string {
+	return formatMessageByValue("Expired Resource", m.value)
+}
+
+func ExpiredResource(value string) error {
+	return &ExpiredResourceError{value}
+}
+
+func IsExpiredResource(e error) bool {
+	_, ok := e.(*ExpiredResourceError)
 	return ok
 }
