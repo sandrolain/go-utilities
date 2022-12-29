@@ -12,16 +12,19 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func RandomBytes(length int) []byte {
-	b := make([]byte, length)
-	rand.Read(b)
-	return b
+func RandomBytes(length int) (res []byte, err error) {
+	res = make([]byte, length)
+	_, err = rand.Read(res)
+	return
 }
 
-func RandomBytesBase64(length int) string {
-	b := RandomBytes(length)
-	rand.Read(b)
-	return base64.StdEncoding.EncodeToString(b)
+func RandomBytesBase64(length int) (res string, err error) {
+	b, err := RandomBytes(length)
+	if err != nil {
+		return
+	}
+	res = base64.StdEncoding.EncodeToString(b)
+	return
 }
 
 func BcryptHash(value []byte) ([]byte, error) {
