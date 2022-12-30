@@ -24,6 +24,10 @@ func Info(msg string) {
 	logr.Zerolog.Info().Msg(msg)
 }
 
+func Infof(msg string, args ...interface{}) {
+	logr.Zerolog.Info().Msgf(msg, args...)
+}
+
 func Warn(msg string) {
 	logr.Zerolog.Warn().Msg(msg)
 }
