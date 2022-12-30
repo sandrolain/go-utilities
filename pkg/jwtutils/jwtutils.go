@@ -2,14 +2,12 @@ package jwtutils
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt"
 )
 
 type JWTParams struct {
-	Scope     string
 	Subject   string
 	Issuer    string
 	Secret    []byte
@@ -17,7 +15,6 @@ type JWTParams struct {
 }
 
 type JWTInfo struct {
-	Scope     string
 	Subject   string
 	Issuer    string
 	IssuedAt  time.Time
@@ -25,12 +22,11 @@ type JWTInfo struct {
 }
 
 func CreateJWT(params JWTParams) (string, error) {
-	subject := fmt.Sprintf("%s:%s", params.Scope, params.Subject)
 	claims := jwt.StandardClaims{
 		ExpiresAt: params.ExpiresAt.Unix(),
 		IssuedAt:  time.Now().Unix(),
 		Issuer:    params.Issuer,
-		Subject:   subject,
+		Subject:   params.Subject,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(params.Secret)
@@ -50,13 +46,7 @@ func ParseJWT(jwtString string, params JWTParams) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("Cannot obtain JWT claims")
 	}
-	i := strings.Index(claims.Subject, ":")
-	scope := claims.Subject[:i]
-	if params.Scope != scope {
-		return "", fmt.Errorf(`JWT scope "%s" not as expected "%s"`, scope, params.Scope)
-	}
-	subject := claims.Subject[i+1:]
-	return subject, nil
+	return claims.Subject, nil
 }
 
 func ExtractInfoFromJWT(jwtString string) (*JWTInfo, error) {
@@ -68,17 +58,10 @@ func ExtractInfoFromJWT(jwtString string) (*JWTInfo, error) {
 	if !ok || claims.IssuedAt == 0 {
 		return nil, fmt.Errorf("Cannot obtain JWT Info")
 	}
-	i := strings.Index(claims.Subject, ":")
-	if i < 0 {
-		return nil, fmt.Errorf("Invalid JWT Subject \"%s\"", claims.Subject)
-	}
-	scope := claims.Subject[:i]
-	subject := claims.Subject[i+1:]
 	return &JWTInfo{
 		IssuedAt:  time.Unix(claims.IssuedAt, 0),
 		ExpiresAt: time.Unix(claims.ExpiresAt, 0),
-		Subject:   subject,
-		Scope:     scope,
+		Subject:   claims.Subject,
 		Issuer:    claims.Issuer,
 	}, nil
 }
