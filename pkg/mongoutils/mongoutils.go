@@ -112,10 +112,9 @@ func (c *Client) FindMany(collection string, filter interface{}, sort interface{
 	return cursor.All(ctx, v)
 }
 
-func (c *Client) FindManyByField(collection string, field string, value interface{}, sort int, limit int64, v interface{}) error {
+func (c *Client) FindManyByField(collection string, field string, value interface{}, limit int64, v interface{}) error {
 	filter := bson.M{field: value}
-	sortExp := bson.M{field: sort}
-	return c.FindMany(collection, filter, sortExp, limit, v)
+	return c.FindMany(collection, filter, nil, limit, v)
 }
 
 func (c *Client) InsertOne(collection string, v interface{}) (*mongo.InsertOneResult, error) {
