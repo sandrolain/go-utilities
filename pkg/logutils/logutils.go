@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog"
 )
@@ -50,7 +52,17 @@ func Close() error {
 }
 
 func InitLogger() {
-	zeroLogger := zerolog.New(os.Stderr).With().Timestamp().Logger()
+	zerolog.CallerMarshalFunc = func(pc uintptr, file string, line int) string {
+		parts := strings.Split(file, "/")
+		n := len(parts)
+		if n < 3 {
+			n = 3
+		}
+		file = strings.Join(parts[n-3:], "/")
+		return file + ":" + strconv.Itoa(line)
+	}
+
+	zeroLogger := zerolog.New(os.Stderr).With().Timestamp().CallerWithSkipFrameCount(3).Logger()
 
 	outR, outW, _ := os.Pipe()
 	errR, errW, _ := os.Pipe()

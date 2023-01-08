@@ -3,6 +3,7 @@ package debugutils
 import (
 	"encoding/json"
 	"fmt"
+	"runtime"
 )
 
 func PrintJSON(val interface{}) {
@@ -12,4 +13,12 @@ func PrintJSON(val interface{}) {
 	} else {
 		fmt.Println(string(res))
 	}
+}
+
+func FileLine() (s string) {
+	_, fileName, fileLine, ok := runtime.Caller(1)
+	if ok {
+		s = fmt.Sprintf("%s:%d", fileName, fileLine)
+	}
+	return
 }
