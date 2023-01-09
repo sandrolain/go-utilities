@@ -49,6 +49,7 @@ func (r *FetchResponse) BodyJSON(res interface{}) (err error) {
 
 func Fetch(url string) (res *FetchResponse) {
 	res = &FetchResponse{}
+	//#nosec G107 -- implementation of generic utility
 	response, err := http.Get(url)
 	res.Response = response
 	res.err = err
