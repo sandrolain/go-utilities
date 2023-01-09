@@ -33,6 +33,9 @@ func CreateJWT(params JWTParams) (string, error) {
 }
 
 func ParseJWT(jwtString string, params JWTParams) (string, error) {
+	if jwtString == "" {
+		return "", fmt.Errorf("the jwt string is empty")
+	}
 	token, err := jwt.ParseWithClaims(jwtString, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return params.Secret, nil
 	})
@@ -40,23 +43,26 @@ func ParseJWT(jwtString string, params JWTParams) (string, error) {
 		return "", err
 	}
 	if !token.Valid {
-		return "", fmt.Errorf("Invalid JWT")
+		return "", fmt.Errorf("invalid JWT")
 	}
 	claims, ok := token.Claims.(*jwt.StandardClaims)
 	if !ok {
-		return "", fmt.Errorf("Cannot obtain JWT claims")
+		return "", fmt.Errorf("cannot obtain JWT claims")
 	}
 	return claims.Subject, nil
 }
 
 func ExtractInfoFromJWT(jwtString string) (*JWTInfo, error) {
+	if jwtString == "" {
+		return nil, fmt.Errorf("the jwt string is empty")
+	}
 	token, _, err := new(jwt.Parser).ParseUnverified(jwtString, &jwt.StandardClaims{})
 	if err != nil {
 		return nil, err
 	}
 	claims, ok := token.Claims.(*jwt.StandardClaims)
 	if !ok || claims.IssuedAt == 0 {
-		return nil, fmt.Errorf("Cannot obtain JWT Info")
+		return nil, fmt.Errorf("cannot obtain JWT Info")
 	}
 	return &JWTInfo{
 		IssuedAt:  time.Unix(claims.IssuedAt, 0),
