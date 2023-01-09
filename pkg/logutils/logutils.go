@@ -34,8 +34,8 @@ func Warn(msg string) {
 	logr.Zerolog.Warn().Msg(msg)
 }
 
-func Error(msg string, err error) {
-	logr.Zerolog.Error().Err(err).Msg(msg)
+func Error(err error, msg string, args ...interface{}) {
+	logr.Zerolog.Error().Err(err).Msgf(msg, args...)
 }
 
 func Fatalf(msg string, args ...interface{}) {
